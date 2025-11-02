@@ -2,43 +2,42 @@ package org.example.algo.topo;
 
 import org.example.model.DirectedGraph;
 import org.example.model.Edge;
-import org.example.algo.Result;
 
 import java.util.*;
 
-/**
- * Topological Sort for Directed Acyclic Graph (DAG).
- */
 public class TopologicalSort {
+    private final DirectedGraph graph;
+    private int operationCount = 0;
 
-    public static Result run(DirectedGraph g) {
-        long start = System.nanoTime();
-        int n = g.getNodeCount();
-        boolean[] visited = new boolean[n];
-        Stack<Integer> stack = new Stack<>();
-        int operations = 0;
-
-        for (int i = 0; i < n; i++) {
-            if (!visited[i]) {
-                operations += dfs(i, g, visited, stack);
-            }
-        }
-
-        long end = System.nanoTime();
-        double timeMs = (end - start) / 1_000_000.0;
-
-        System.out.println("Topological Order: " + stack);
-        return new Result("TopologicalSort", operations, timeMs);
+    public TopologicalSort(DirectedGraph graph) {
+        this.graph = graph;
     }
 
-    private static int dfs(int u, DirectedGraph g, boolean[] visited, Stack<Integer> stack) {
-        visited[u] = true;
-        int operations = 1;
-        for (Edge e : g.getEdgesFrom(u)) {
-            int v = e.getV();
-            if (!visited[v]) operations += dfs(v, g, visited, stack);
+    public List<Integer> run() {
+        boolean[] visited = new boolean[graph.getNodeCount()];
+        Stack<Integer> stack = new Stack<>();
+
+        for (int i = 0; i < graph.getNodeCount(); i++) {
+            if (!visited[i]) dfs(i, visited, stack);
         }
-        stack.push(u);
-        return operations;
+
+        List<Integer> result = new ArrayList<>();
+        while (!stack.isEmpty()) result.add(stack.pop());
+        return result;
+    }
+
+    private void dfs(int node, boolean[] visited, Stack<Integer> stack) {
+        visited[node] = true;
+        operationCount++;
+
+        for (Edge e : graph.getEdgesFrom(node)) {
+            if (!visited[e.v]) dfs(e.v, visited, stack);
+        }
+
+        stack.push(node);
+    }
+
+    public int getOperationCount() {
+        return operationCount;
     }
 }

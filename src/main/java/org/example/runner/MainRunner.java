@@ -1,76 +1,83 @@
 package org.example.runner;
 
 import org.example.algo.Result;
+import org.example.algo.dagsp.DAGShortestPath;
 import org.example.algo.scc.TarjanSCC;
 import org.example.algo.topo.TopologicalSort;
-import org.example.algo.dagsp.DAGShortestPath;
 import org.example.data.GraphLoader;
 import org.example.model.DirectedGraph;
 
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainRunner {
-
     public static void main(String[] args) {
-        String[] files = {
-                "small_graph.json",
-                "medium_graph.json",
-                "large_graph.json"
-        };
-
+        String[] graphFiles = {"small_graph.json", "medium_graph.json", "large_graph.json"};
         List<Result> allResults = new ArrayList<>();
 
-        for (String file : files) {
-            System.out.println("\n===============================");
-            System.out.println("📂 Processing " + file);
-            System.out.println("===============================");
+        for (String file : graphFiles) {
+            System.out.println("\n✅ Loaded graph: " + file);
+            List<DirectedGraph> graphs = GraphLoader.load(file);
 
-            DirectedGraph g = GraphLoader.loadGraph(file);
-            if (g == null) {
-                System.out.println("⚠️ Skipping " + file + " (not found)");
+            if (graphs == null || graphs.isEmpty()) {
+                System.out.println("⚠️ No graphs found in " + file);
                 continue;
             }
 
-            // Run algorithms
-            System.out.println("\n--- Tarjan SCC ---");
-            Result tarjan = TarjanSCC.run(g);
-            allResults.add(tarjan);
+            for (DirectedGraph g : graphs) {
+                System.out.println("\n🚀 Running algorithms on graph: " + file + " (N=" + g.getNodeCount() + ")");
 
-            System.out.println("\n--- Topological Sort ---");
-            Result topo = TopologicalSort.run(g);
-            allResults.add(topo);
+                // === Tarjan SCC ===
+                TarjanSCC tarjan = new TarjanSCC(g);
+                long start = System.nanoTime();
+                tarjan.run();
+                long end = System.nanoTime();
+                double timeMs = (end - start) / 1_000_000.0;
+                Result tarjanResult = new Result("Tarjan SCC", tarjan.getOperationCount(), timeMs);
+                allResults.add(tarjanResult);
+                System.out.println("✔ Tarjan SCC done: " + tarjanResult);
 
-            System.out.println("\n--- DAG Shortest Path ---");
-            Result dag = DAGShortestPath.run(g);
-            allResults.add(dag);
+                // === Topological Sort ===
+                TopologicalSort topo = new TopologicalSort(g);
+                start = System.nanoTime();
+                List<Integer> order = topo.run();
+                end = System.nanoTime();
+                timeMs = (end - start) / 1_000_000.0;
+                Result topoResult = new Result("Topological Sort", topo.getOperationCount(), timeMs);
+                allResults.add(topoResult);
+                System.out.println("✔ Topological Sort done: " + order);
 
-            System.out.println("\n✅ Finished processing " + file);
+                // === DAG Shortest Path ===
+                DAGShortestPath dag = new DAGShortestPath(g);
+                start = System.nanoTime();
+                int[] distances = dag.run();
+                end = System.nanoTime();
+                timeMs = (end - start) / 1_000_000.0;
+                Result dagResult = new Result("DAG Shortest Path", distances, dag.getOperationCount(), timeMs);
+                allResults.add(dagResult);
+                System.out.println("✔ DAG Shortest Path done: " + java.util.Arrays.toString(distances));
+            }
         }
 
-        // Save all results to CSV
-        saveToCSV(allResults, "results.csv");
-        System.out.println("\n💾 Results saved to results.csv");
+        saveResultsToCSV(allResults);
+        System.out.println("\n📊 Results saved to results.csv");
     }
 
-    /**
-     * Writes algorithm results to a CSV file.
-     */
-    private static void saveToCSV(List<Result> results, String fileName) {
-        try (FileWriter writer = new FileWriter(fileName)) {
-            writer.append("Algorithm,Time(ms),Operations,NegativeCycle\n");
-
+    private static void saveResultsToCSV(List<Result> results) {
+        try (FileWriter writer = new FileWriter("results.csv")) {
+            writer.write("Algorithm,Operations,Time(ms),NegativeCycle,Distances\n");
             for (Result r : results) {
-                writer.append(r.algorithm).append(",")
-                        .append(String.format("%.3f", r.execTimeMs)).append(",")
-                        .append(String.valueOf(r.operations)).append(",")
-                        .append(String.valueOf(r.negativeCycle)).append("\n");
+                writer.write(String.format("%s,%d,%.3f,%b,%s\n",
+                        r.algorithm,
+                        r.operations,
+                        r.execTimeMs,
+                        r.negativeCycle,
+                        (r.distances != null ? java.util.Arrays.toString(r.distances) : "N/A")));
             }
-
-            System.out.println("✅ CSV file created: " + fileName);
         } catch (IOException e) {
-            System.out.println("❌ Error writing CSV: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 }
