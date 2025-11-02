@@ -1,9 +1,9 @@
-package org.example.graph;
+package org.example.model;
 
 import java.util.*;
 
 /**
- * Directed weighted graph representation.
+ * Directed weighted graph structure for Tarjan, Topological Sort, and DAG Shortest Path.
  */
 public class DirectedGraph {
     private final int n;
@@ -11,6 +11,13 @@ public class DirectedGraph {
     private final int source;
     private final Map<Integer, List<Edge>> adj = new HashMap<>();
 
+    /**
+     * Constructor
+     *
+     * @param n        number of nodes
+     * @param directed true if the graph is directed
+     * @param source   source vertex for path algorithms
+     */
     public DirectedGraph(int n, boolean directed, int source) {
         this.n = n;
         this.directed = directed;
@@ -21,6 +28,7 @@ public class DirectedGraph {
         }
     }
 
+    /** Adds an edge to the graph */
     public void addEdge(int u, int v, int w) {
         adj.get(u).add(new Edge(u, v, w));
         if (!directed) {
@@ -28,8 +36,18 @@ public class DirectedGraph {
         }
     }
 
+    /** Returns adjacency list for a given node */
     public List<Edge> getEdgesFrom(int u) {
         return adj.get(u);
+    }
+
+    /** Returns all edges in the graph (used by some algorithms) */
+    public List<Edge> getAllEdges() {
+        List<Edge> all = new ArrayList<>();
+        for (List<Edge> list : adj.values()) {
+            all.addAll(list);
+        }
+        return all;
     }
 
     public int getNodeCount() {
@@ -51,23 +69,13 @@ public class DirectedGraph {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
+        sb.append("DirectedGraph (n=").append(n)
+                .append(", edges=").append(getEdgeCount()).append(")\n");
         for (int u = 0; u < n; u++) {
             for (Edge e : adj.get(u)) {
-                sb.append(u).append(" -> ").append(e.v)
-                        .append(" (w=").append(e.w).append(")\n");
+                sb.append("  ").append(e).append("\n");
             }
         }
         return sb.toString();
-    }
-
-    /** Inner Edge class */
-    public static class Edge {
-        public final int u, v, w;
-
-        public Edge(int u, int v, int w) {
-            this.u = u;
-            this.v = v;
-            this.w = w;
-        }
     }
 }
