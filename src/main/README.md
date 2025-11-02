@@ -1,12 +1,12 @@
-# 🧮 Assignment 4 — Directed Graph Algorithms (Tarjan SCC, Topological Sort, DAG Shortest Path)
+#  Assignment 4 — Directed Graph Algorithms (Tarjan SCC, Topological Sort, DAG Shortest Path)
 
-### 📚 Course: Data Structures and Algorithms
-### 🧑‍💻 Author: Nurtilek Koblandy
-### 🗓️ Project: Implementation and Analysis of Graph Algorithms
+### Course: Data Structures and Algorithms
+### Author: Nurtilek Koblandy
+###  ️Project: Implementation and Analysis of Graph Algorithms
 
 ---
 
-## 🎯 Project Goal
+##  Project Goal
 
 The purpose of this assignment is to **implement and analyze three classical algorithms for directed graphs**:
 
@@ -23,7 +23,7 @@ The project also includes:
 
 ---
 
-## ⚙️ Technologies Used
+##  Technologies Used
 
 | Tool | Purpose |
 |------|----------|
@@ -35,7 +35,7 @@ The project also includes:
 
 ---
 
-## 🧩 Project Structure
+##  Project Structure
 ```
 src/
 ├── main/
@@ -59,7 +59,7 @@ src/
 
 ---
 
-## 🧠 Implemented Algorithms
+##  Implemented Algorithms
 
 ### 🔹 **1. Tarjan's Strongly Connected Components**
 - Detects groups of vertices where each vertex is reachable from every other vertex.
@@ -78,7 +78,7 @@ src/
 
 ---
 
-## 🧱 Core Classes
+##  Core Classes
 
 | Class | Package | Description |
 |-------|----------|-------------|
@@ -94,7 +94,7 @@ src/
 
 ---
 
-## 🧪 Testing and Verification
+##  Testing and Verification
 
 Unit tests are implemented in `GraphTest.java`.  
 They verify:
@@ -114,7 +114,7 @@ mvn test
 ```
 ---
 
-## ⚡ Running the Program
+## Running the Program
 
 ####  1. Generate Random Graphs
 ```bash
@@ -140,7 +140,7 @@ Topological Sort,6,0.03,false,N/A
 DAG Shortest Path,10,0.4,false,[0,5,3,10,7,5]
 ```
 ---
-# 📊 Performance Analysis
+#  Performance Analysis
 ```
 Dataset	Algorithm	Operations	Time (ms)	Comment
 Small	Tarjan SCC	~6	0.2–0.4	Linear scaling
@@ -154,7 +154,7 @@ Medium	DAG Shortest Path	~11	0.05	Stable
 Large	DAG Shortest Path	~14	0.23	Slight growth
 ```
 ---
-# 🧾 Conclusion
+# Conclusion
 
 - All algorithms correctly implement their theoretical behavior.
 
@@ -166,7 +166,7 @@ Large	DAG Shortest Path	~14	0.23	Slight growth
 
 - Project demonstrates clean OOP design and modular structure.
 ---
-# 💡 Future Improvements
+#  Future Improvements
 
 - Add graph visualization using JavaFX or Graphviz.
 
@@ -176,10 +176,10 @@ Large	DAG Shortest Path	~14	0.23	Slight growth
 
 - Extend tests for extreme cases and disconnected graphs.
 
-# 🧑‍💻 Author
+#  Author
 
 ### Nurtilek Koblandy
 
-📘 Data Structures and Algorithms Course — 2025
+ Data Structures and Algorithms Course — 2025
 
-🏫 SE-2423
+ SE-2423
