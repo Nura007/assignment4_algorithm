@@ -1,48 +1,82 @@
 package org.example.data;
 
-import com.google.gson.*;
+import com.google.gson.Gson;
+import org.example.generator.DirectedGraphGenerator;
 import org.example.model.DirectedGraph;
 
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.List;
+import java.util.*;
 
 /**
  * GraphLoader
- * Reads a JSON file and converts it into a DirectedGraph object.
+ * Loads directed graphs from JSON files.
+ * If a file does not exist, it automatically generates it.
  */
 public class GraphLoader {
 
-    public static DirectedGraph loadGraph(String filePath) {
-        try (FileReader reader = new FileReader(filePath)) {
-            JsonObject obj = JsonParser.parseReader(reader).getAsJsonObject();
+    public static List<DirectedGraph> load(String fileName) {
+        File file = new File("src/main/resources/" + fileName);
+        if (!file.exists()) {
+            file = new File(fileName);
+        }
 
-            boolean directed = obj.get("directed").getAsBoolean();
-            int n = obj.get("n").getAsInt();
-            int source = obj.get("source").getAsInt();
+        // 🔥 если файла нет — генерируем заново
+        if (!file.exists()) {
+            System.out.println("⚠️ File not found → Generating: " + fileName);
+            if (fileName.contains("small")) {
+                DirectedGraphGenerator.main(new String[]{});
+            } else if (fileName.contains("medium")) {
+                DirectedGraphGenerator.main(new String[]{});
+            } else if (fileName.contains("large")) {
+                DirectedGraphGenerator.main(new String[]{});
+            }
+        }
 
-            DirectedGraph graph = new DirectedGraph(n, directed, source);
+        try (FileReader reader = new FileReader(file)) {
+            Gson gson = new Gson();
+            InputData input = gson.fromJson(reader, InputData.class);
 
-            JsonArray edgesArray = obj.getAsJsonArray("edges");
-            for (JsonElement e : edgesArray) {
-                JsonObject edge = e.getAsJsonObject();
-                int u = edge.get("u").getAsInt();
-                int v = edge.get("v").getAsInt();
-                int w = edge.get("w").getAsInt();
-                graph.addEdge(u, v, w);
+            if (input == null || input.graphs == null) {
+                System.out.println("⚠️ No graphs found in " + file.getPath());
+                return new ArrayList<>();
             }
 
-            System.out.println("✅ Graph loaded successfully from " + filePath);
-            System.out.println("Nodes: " + n + ", Edges: " + edgesArray.size());
-            return graph;
+            List<DirectedGraph> result = new ArrayList<>();
+            for (GraphJson json : input.graphs) {
+                DirectedGraph g = new DirectedGraph(json.n);
+                g.setSource(json.source);
+                for (EdgeJson e : json.edges) {
+                    g.addEdge(e.u, e.v, e.w);
+                }
+                result.add(g);
+            }
+
+            System.out.println("✅ Loaded " + result.size() + " graphs from " + file.getPath());
+            return result;
 
         } catch (IOException e) {
-            System.out.println("❌ Error loading graph: " + e.getMessage());
-            return null;
+            System.out.println("❌ Error reading " + fileName + ": " + e.getMessage());
+            return new ArrayList<>();
         }
     }
 
-    public static List<DirectedGraph> loadGraphs(String inputFile) {
-        return List.of();
+    // === внутренние структуры для JSON ===
+    private static class InputData {
+        List<GraphJson> graphs;
+    }
+
+    private static class GraphJson {
+        boolean directed;
+        int n;
+        int source;
+        List<EdgeJson> edges;
+    }
+
+    private static class EdgeJson {
+        int u;
+        int v;
+        int w;
     }
 }

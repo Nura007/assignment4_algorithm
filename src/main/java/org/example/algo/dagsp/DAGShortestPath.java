@@ -2,66 +2,43 @@ package org.example.algo.dagsp;
 
 import org.example.model.DirectedGraph;
 import org.example.model.Edge;
-import org.example.algo.Result;
+import org.example.algo.topo.TopologicalSort;
 
 import java.util.*;
 
-/**
- * Shortest Path in Directed Acyclic Graph (DAG) using Topological Order.
- */
 public class DAGShortestPath {
+    private final DirectedGraph graph;
+    private int operationCount = 0;
 
-    public static Result run(DirectedGraph g) {
-        long start = System.nanoTime();
-        int n = g.getNodeCount();
-        int src = g.getSource();
-        int operations = 0;
+    public DAGShortestPath(DirectedGraph graph) {
+        this.graph = graph;
+    }
 
-        // Step 1: Topological order
-        Stack<Integer> stack = topoSort(g);
-
-        // Step 2: Initialize distances
+    public int[] run() {
+        int n = graph.getNodeCount();
         int[] dist = new int[n];
         Arrays.fill(dist, Integer.MAX_VALUE);
-        dist[src] = 0;
+        dist[graph.getSource()] = 0;
 
-        // Step 3: Relax edges following topological order
-        while (!stack.isEmpty()) {
-            int u = stack.pop();
+        TopologicalSort topo = new TopologicalSort(graph);
+        List<Integer> order = topo.run();
+
+        for (int u : order) {
             if (dist[u] != Integer.MAX_VALUE) {
-                for (Edge e : g.getEdgesFrom(u)) {
-                    int v = e.getV();
-                    int w = e.getW();
-                    if (dist[v] > dist[u] + w) {
-                        dist[v] = dist[u] + w;
+                for (Edge e : graph.getEdgesFrom(u)) {
+                    if (dist[e.v] > dist[u] + e.w) {
+                        dist[e.v] = dist[u] + e.w;
+                        operationCount++;
                     }
-                    operations++;
                 }
             }
         }
 
-        long end = System.nanoTime();
-        double timeMs = (end - start) / 1_000_000.0;
-
-        System.out.println("Shortest distances from source " + src + ": " + Arrays.toString(dist));
-        return new Result("DAGShortestPath", dist, operations, timeMs);
+        System.out.println("Shortest distances from source " + graph.getSource() + ": " + Arrays.toString(dist));
+        return dist;
     }
 
-    private static Stack<Integer> topoSort(DirectedGraph g) {
-        int n = g.getNodeCount();
-        boolean[] visited = new boolean[n];
-        Stack<Integer> stack = new Stack<>();
-        for (int i = 0; i < n; i++) {
-            if (!visited[i]) dfs(i, g, visited, stack);
-        }
-        return stack;
-    }
-
-    private static void dfs(int u, DirectedGraph g, boolean[] visited, Stack<Integer> stack) {
-        visited[u] = true;
-        for (Edge e : g.getEdgesFrom(u)) {
-            if (!visited[e.getV()]) dfs(e.getV(), g, visited, stack);
-        }
-        stack.push(u);
+    public int getOperationCount() {
+        return operationCount;
     }
 }

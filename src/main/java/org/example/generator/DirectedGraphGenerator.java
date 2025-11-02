@@ -1,76 +1,74 @@
 package org.example.generator;
 
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 
 /**
- * GraphGenerator
- * Generates directed weighted graphs for Assignment 4.
- *
- * Example categories:
- *  - small.json (n=5–10)
- *  - medium.json (n=50–150)
- *  - large.json (n=300–600)
+ * Generates 3 JSON graph files:
+ * small_graph.json, medium_graph.json, large_graph.json
+ * Each file contains 3 directed acyclic connected graphs (DAGs).
  */
 public class DirectedGraphGenerator {
 
-    private static final Random random = new Random();
-
     public static void main(String[] args) {
-        generate("small_graph.json", 5, 10);
-        generate("medium_graph.json", 50, 150);
-        generate("large_graph.json", 300, 600);
+        generateGraph("small_graph.json", 6, 10);
+        generateGraph("medium_graph.json", 12, 25);
+        generateGraph("large_graph.json", 25, 60);
     }
 
-    /**
-     * Generates a random directed graph and saves it as JSON.
-     */
-    private static void generate(String fileName, int minNodes, int maxNodes) {
-        int n = randBetween(minNodes, maxNodes);
-        boolean directed = true;
-        int source = random.nextInt(n);
-        List<Map<String, Object>> edges = new ArrayList<>();
+    private static void generateGraph(String filename, int n, int edges) {
+        Random random = new Random();
+        Map<String, Object> root = new HashMap<>();
+        List<Map<String, Object>> graphs = new ArrayList<>();
 
-        // approximate edge density
-        int edgeCount = (int) (n * 1.5);
-        Set<String> unique = new HashSet<>();
+        // === создаем 3 графа в одном файле ===
+        for (int gIndex = 0; gIndex < 3; gIndex++) {
+            Map<String, Object> graph = new HashMap<>();
+            graph.put("directed", true);
+            graph.put("n", n);
 
-        while (edges.size() < edgeCount) {
-            int u = random.nextInt(n);
-            int v = random.nextInt(n);
-            if (u == v) continue;
-            String key = u + "-" + v;
-            if (unique.contains(key)) continue;
+            List<Map<String, Object>> edgeList = new ArrayList<>();
+            Set<String> seen = new HashSet<>();
 
-            unique.add(key);
-            int w = randBetween(1, 20);
-            Map<String, Object> e = new HashMap<>();
-            e.put("u", u);
-            e.put("v", v);
-            e.put("w", w);
-            edges.add(e);
+            // === гарантируем связность (цепочка от 0 до n-1) ===
+            for (int i = 0; i < n - 1; i++) {
+                int u = i;
+                int v = i + 1;
+                int w = random.nextInt(9) + 1;
+                edgeList.add(Map.of("u", u, "v", v, "w", w));
+                seen.add(u + "-" + v);
+            }
+
+            // === добавляем случайные рёбра, но только вперёд (u < v), чтобы избежать циклов ===
+            while (edgeList.size() < edges) {
+                int u = random.nextInt(n - 1);
+                int v = random.nextInt(n - u - 1) + u + 1; // гарантированно v > u
+                String key = u + "-" + v;
+                if (seen.contains(key)) continue;
+                seen.add(key);
+                int w = random.nextInt(9) + 1;
+                edgeList.add(Map.of("u", u, "v", v, "w", w));
+            }
+
+            graph.put("edges", edgeList);
+            graph.put("source", 0);
+            graph.put("weight_model", "edge");
+            graphs.add(graph);
         }
 
-        Map<String, Object> graph = new LinkedHashMap<>();
-        graph.put("directed", directed);
-        graph.put("n", n);
-        graph.put("edges", edges);
-        graph.put("source", source);
-        graph.put("weight_model", "edge");
-
+        // === сохраняем как JSON ===
+        root.put("graphs", graphs);
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
-        try (FileWriter writer = new FileWriter(fileName)) {
-            gson.toJson(graph, writer);
-            System.out.println("✅ Generated " + fileName + " | Nodes=" + n + " | Edges=" + edges.size());
+        try (FileWriter writer = new FileWriter(filename)) {
+            gson.toJson(root, writer);
+            System.out.println("✅ Saved 3 DAG graphs → " + filename);
         } catch (IOException e) {
-            System.out.println("❌ Error writing " + fileName + ": " + e.getMessage());
+            e.printStackTrace();
         }
-    }
-
-    private static int randBetween(int min, int max) {
-        return random.nextInt(max - min + 1) + min;
     }
 }
